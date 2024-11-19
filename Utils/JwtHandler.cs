@@ -6,13 +6,20 @@ using System.Text;
 namespace Server.Utils;
 
 public class JwtHandler(string secretKey) {
-	private string SecretKey { get; set; } = secretKey;
 	private ClaimsPrincipal? DecodedJwt { get; set; }
+	private readonly string SecretKey = secretKey;
 	public DateTime Expiry { get; set; }
 
+/// <summary>
+/// Generates a JWT token for a given user
+/// </summary>
+/// <param name="userId">The user's ID</param>
+/// <param name="role">The user's role</param>
+/// <param name="exp">The optional expiration time for the token</param>
+/// <returns>A JWT token</returns>
 	public string GenerateJwt(object userId, string role, DateTime? exp = null) {
 		var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(SecretKey));
-		var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+		var sign = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 		string data = userId?.ToString() ?? string.Empty;
 
 		var claims = new[] {
@@ -27,36 +34,48 @@ public class JwtHandler(string secretKey) {
 			audience: "users",
 			claims: claims,
 			expires: Expiry,
-			signingCredentials: credentials
+			signingCredentials: sign
 		);
 
 		return new JwtSecurityTokenHandler().WriteToken(token);
 	}
-	public ClaimsPrincipal? DecodeJwt(string token){
+/// <summary>
+/// Decodes a JWT token into a <see cref="ClaimsPrincipal"/>.
+/// </summary>
+/// <param name="token">The JWT token to decode</param>
+/// <returns>The decoded <see cref="ClaimsPrincipal"/>, or null if the decode fails</returns>
+	public ClaimsPrincipal? DecodeJwt(string token) {
 		try {
-				var tokenHandler = new JwtSecurityTokenHandler();
-				var jwtToken = tokenHandler.ReadJwtToken(token);
-				var claimsIdentity = new ClaimsIdentity(jwtToken.Claims, "JWT");
-				var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
-				DecodedJwt = claimsPrincipal;
-				return claimsPrincipal;
-		} catch (Exception e) {
-				Console.WriteLine(e);
-				return null;
+			var tokenHandler = new JwtSecurityTokenHandler();
+			var jwtToken = tokenHandler.ReadJwtToken(token);
+			var claimsIdentity = new ClaimsIdentity(jwtToken.Claims, "JWT");
+
+			DecodedJwt = new ClaimsPrincipal(claimsIdentity);
+			return DecodedJwt;
+		} 
+		catch (Exception e) {
+			Console.WriteLine(e);
+			return null;
 		}
 	}
+/// <summary>
+/// Gets the decoded expiry date and time from the JWT token, or null if there is no token or the token lacks an expiry claim.
+/// </summary>
+/// <returns>The decoded expiry date and time, or null</returns>
 	public DateTime? GetDecodedExpiry() {
 		var expiryClaim = DecodedJwt?.FindFirst(JwtRegisteredClaimNames.Exp)?.Value;
 		if (expiryClaim == null) return null;
+
 		var unixTimeStamp = long.Parse(expiryClaim);
-		return DateTimeOffset.FromUnixTimeSeconds(unixTimeStamp).UtcDateTime;
+		return DateTimeOffset
+		.FromUnixTimeSeconds(unixTimeStamp).UtcDateTime;
 	}
+/// <summary>
+/// Retrieves the subject (sub) claim from the decoded JWT token.
+/// </summary>
+/// <returns>The subject claim value as a string, or null if the subject claim is not present or the token has not been decoded.</returns>
 	public string? GetDecodedSub() {
-		var subClaim = DecodedJwt?.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
-		return subClaim;
-	}
-	public string? GetDecodedRole() {
-		var subClaim = DecodedJwt?.FindFirst(ClaimTypes.Role)?.Value;
-		return subClaim;
+		return DecodedJwt?
+		.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
 	}
 }

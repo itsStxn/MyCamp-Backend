@@ -11,7 +11,14 @@ namespace Server.Controllers;
 public class CampsitesController(ICampsiteService campsiteService) : ControllerBase {
 	private readonly ICampsiteService CampsiteService = campsiteService;
 
-	[Authorize]
+/// <summary>
+/// Adds a new campsite to the database.
+/// </summary>
+/// <param name="site">The campsite to add, including its attributes and equipment.</param>
+/// <returns>A status code indicating the success of the operation, with a message if the operation failed.</returns>
+/// <exception cref="InvalidOperationException">Thrown when the campsite's name is already in use.</exception>
+/// <exception cref="Exception">Thrown for any other general exceptions.</exception>
+	[Authorize("Admin")]
 	[HttpPost("add")]
 	[ProducesResponseType(typeof(string), StatusCodes.Status201Created)]
 	public IActionResult AddCampsite([FromBody] AddCampsite site) {
@@ -30,7 +37,13 @@ public class CampsitesController(ICampsiteService campsiteService) : ControllerB
 		}
 	}
 
-	[Authorize]
+/// <summary>
+/// Enables a campsite, allowing it to be booked again.
+/// </summary>
+/// <param name="campsiteID">The ID of the campsite to enable.</param>
+/// <returns>A status code indicating the success of the operation, with a message if the operation failed.</returns>
+/// <exception cref="Exception">Thrown for any general exceptions.</exception>
+	[Authorize("Admin")]
 	[HttpPut("enable")]
 	[ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
 	public IActionResult EnableCampsite([FromQuery] int campsiteID) {
@@ -45,7 +58,15 @@ public class CampsitesController(ICampsiteService campsiteService) : ControllerB
 		}
 	}
 
-	[Authorize]
+/// <summary>
+/// Disables a campsite, preventing it from being booked again.
+/// </summary>
+/// <param name="campsiteID">The ID of the campsite to disable.</param>
+/// <returns>A status code indicating the success of the operation, with a message if the operation failed.</returns>
+/// <exception cref="KeyNotFoundException">Thrown if the campsite does not exist.</exception>
+/// <exception cref="InvalidOperationException">Thrown if the campsite is already disabled.</exception>
+/// <exception cref="Exception">Thrown for any general exceptions.</exception>
+	[Authorize("Admin")]
 	[HttpPut("disable")]
 	[ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
 	public IActionResult DisableCampsite([FromQuery] int campsiteID) {
@@ -68,7 +89,15 @@ public class CampsitesController(ICampsiteService campsiteService) : ControllerB
 		}
 	}
 
-	[Authorize]
+/// <summary>
+/// Deletes a campsite from the database.
+/// </summary>
+/// <param name="campsiteID">The ID of the campsite to delete.</param>
+/// <returns>A status code indicating the success of the operation, with a message if the operation failed.</returns>
+/// <exception cref="KeyNotFoundException">Thrown if the campsite does not exist.</exception>
+/// <exception cref="InvalidOperationException">Thrown for any invalid operations during deletion.</exception>
+/// <exception cref="Exception">Thrown for any general exceptions.</exception>
+	[Authorize("Admin")]
 	[HttpDelete("delete")]
 	[ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
 	public IActionResult DeleteCampsite([FromQuery] int campsiteID) {
@@ -91,7 +120,15 @@ public class CampsitesController(ICampsiteService campsiteService) : ControllerB
 		}
 	}
 
-	[Authorize]
+/// <summary>
+/// Updates the capacity of a given campsite.
+/// </summary>
+/// <param name="camp">Object containing the campsite ID and the new capacity.</param>
+/// <returns>A status code indicating the success of the operation, with a message if the operation failed.</returns>
+/// <exception cref="KeyNotFoundException">Thrown if the campsite does not exist.</exception>
+/// <exception cref="DataException">Thrown if the capacity is invalid.</exception>
+/// <exception cref="Exception">Thrown for any other general exceptions.</exception>
+	[Authorize("Admin")]
 	[HttpPost("setCapacity")]
 	[ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
 	public IActionResult UpdateCapacity([FromBody] UpdateCampCapacity camp) {
@@ -114,6 +151,13 @@ public class CampsitesController(ICampsiteService campsiteService) : ControllerB
 		}
 	}
 
+/// <summary>
+/// Retrieves a dictionary of available dates for a given campsite.
+/// </summary>
+/// <param name="campsiteID">The ID of the campsite to retrieve availabilities for.</param>
+/// <returns>A dictionary where the keys are the available dates in the format "YYYY-MM-DD" and the values are boolean indicating whether the date is available (true) or unavailable (false).</returns>
+/// <exception cref="InvalidOperationException">Thrown if the campsite does not exist.</exception>
+/// <exception cref="Exception">Thrown for any other general exceptions.</exception>
 	[Authorize]
 	[HttpGet("{campsiteID}/availabilities")]
 	[ProducesResponseType(typeof(Dictionary<string, bool>), StatusCodes.Status200OK)]

@@ -1,3 +1,9 @@
+bin/
+obj/
+
+# Json files
+.json
+
 # Node modules
 node_modules/
 

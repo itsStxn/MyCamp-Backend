@@ -2,17 +2,27 @@
 using Server.Models;
 using System.Data;
 using Dapper;
+using System.Text.Json.Serialization;
 
 namespace Server.Services;
 
 public class AttributeService(IDbConnection db) : IAttributeService {
 	private readonly IDbConnection Db = db;
 
+/// <summary>
+/// Gets all the attributes
+/// </summary>
+/// <returns>All the attributes</returns>
 	public CampAttribute[] GetAttributes() {
 		string selectQuery = SelectAttributesQuery();
 		var attributes = Db.Query<CampAttribute>(selectQuery);
 		return attributes.ToArray();
 	}
+/// <summary>
+/// Gets all the attributes for a given campsite
+/// </summary>
+/// <param name="campsiteID">The id of the campsite to get the attributes for</param>
+/// <returns>The attributes for the given campsite</returns>
 	public CampAttribute[] GetAttributesByCampsite(int campsiteID) {
 		string selectQuery = SelectAttributesByCampsiteQuery();
 		var attributes = Db.Query<CampAttribute>(selectQuery, new { campsiteID });
